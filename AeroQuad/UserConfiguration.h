@@ -96,7 +96,7 @@
 //#define AltitudeHoldRangeFinder	// Enables Altitude Hold with range finder, not displayed on the configurator (yet)
 //#define AutoLanding			// Enables auto landing on channel AUX3 of the remote, NEEDS AltitudeHoldBaro AND AltitudeHoldRangeFinder to be defined
 
-#define UseGPS			// Enables GPS, tries to auto-detect the GPS, may have some detection trouble making the connection to the configurator not working
+//#define UseGPS			// Enables GPS, tries to auto-detect the GPS, may have some detection trouble making the connection to the configurator not working
 //#define UseGPSNavigator		// EXPERIMENTAL NEEDS UseGPS TO BE DEFINED, enables GPS Position Hold, auto return to home if no mission or execute mission
 
 //
@@ -155,7 +155,8 @@
 // This will output telemetry at slow (1200baud) rate once per second on Serial2. 
 // *******************************************************************************************************************************
 //#define SlowTelemetry		// Enables audio channel telemetry on Serial2
-
+//#define SoftModem             // Enable usage of DAC as modem on AQ32 instead of Serial 2
+//#define SOFTMODEM_FSKv2       // Enable non standard FSK frequencies used by FSKv2 module (TCM3105 at 8Mhz)
 
 //
 // *******************************************************************************************************************************
