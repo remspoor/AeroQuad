@@ -40,14 +40,14 @@
 // Mega processor
 //#define AeroQuadMega_v1     // Arduino Mega with AeroQuad Shield v1.7 and below
 //#define AeroQuadMega_v2     // Arduino Mega with AeroQuad Shield v2.0
-//#define AeroQuadMega_v21    // Arduino Mega with AeroQuad Shield v2.1
+#define AeroQuadMega_v21    // Arduino Mega with AeroQuad Shield v2.1
 //#define AeroQuadMega_Wii    // Arduino Mega with Wii Sensors and AeroQuad Shield v2.x
 //#define ArduCopter          // ArduPilot Mega (APM) with Oilpan Sensor Board
 //#define AeroQuadMega_CHR6DM // Clean Arduino Mega with CHR6DM as IMU/heading ref.
 //#define APM_OP_CHR6DM       // ArduPilot Mega with CHR6DM as IMU/heading ref., Oilpan for barometer (just uncomment AltitudeHoldBaro for baro), and voltage divider
 
 // STM32 processor
-#define AeroQuadSTM32        // Baloo board
+//#define AeroQuadSTM32        // Baloo board
 
 
 /****************************************************************************
@@ -96,8 +96,17 @@
 //#define AltitudeHoldRangeFinder	// Enables Altitude Hold with range finder, not displayed on the configurator (yet)
 //#define AutoLanding			// Enables auto landing on channel AUX3 of the remote, NEEDS AltitudeHoldBaro AND AltitudeHoldRangeFinder to be defined
 
-//#define UseGPS			// Enables GPS, tries to auto-detect the GPS, may have some detection trouble making the connection to the configurator not working
-//#define UseGPSNavigator		// EXPERIMENTAL NEEDS UseGPS TO BE DEFINED, enables GPS Position Hold, auto return to home if no mission or execute mission
+//
+// *******************************************************************************************************************************
+// GPS Options
+// *******************************************************************************************************************************
+#define UseGPS		        // Enables GPS (for mega v2.0/v2.1 & AeroQuad32)
+
+// Device specific settings
+#define UseGPSMTKBINARY   // Set MTK devices to binary protocol (only DiyDrones MTK1.6 protocol supported)
+
+#define UseGPSNavigator   // EXPERIMENTAL NEEDS UseGPS TO BE DEFINED, enables GPS Position Hold, auto return to home if no mission or execute mission
+
 
 //
 // *******************************************************************************************************************************
@@ -119,8 +128,8 @@
 //#define NormalReceiver	// This does nothing really, but it indicates users that they don't have to define other options here if they have a normal receiver
 //#define RemotePCReceiver	// EXPERIMENTAL Use PC as transmitter via serial communicator with XBEE
 //#define ReceiverSBUS		// Use a Futaba sBUS RX, connect sBUS data line via an inverter (see wiki) to Serial2 RX, supports up to 8 channels
-#define ReceiverPPM		// Use a PPM receiver
-//#define ReceiverHWPPM		// Use a PPM receiver with HW timer (less jitter on channel values than PPM), needs a HW modification (see wiki)
+//#define ReceiverPPM		// Use a PPM receiver
+#define ReceiverHWPPM		// Use a PPM receiver with HW timer (less jitter on channel values than PPM), needs a HW modification (see wiki)
 
 // You need to select one of these channel order definitions for PPM receiver
 #define SKETCH_SERIAL_SUM_PPM SERIAL_SUM_PPM_1	//For Graupner/Spektrum (DEFAULT)
