@@ -52,13 +52,6 @@
   #error "CameraTXControl need to have CameraControl defined"
 #endif 
 
-// Special motor config additionnal variable
-#if defined(quadXHT_FPVConfig)
- #define quadXConfig
- #define FRONT_YAW_CORRECTION 0.95
- #define REAR_YAW_CORRECTION 1.17
-#endif
-
 
 #include <EEPROM.h>
 #include <Wire.h>
@@ -965,6 +958,8 @@
   #include <AnalogRSSIReader.h>
 #elif defined(UseEzUHFRSSIReader)
   #include <EzUHFRSSIReader.h>
+#elif defined(UseSBUSRSSIReader)
+  #include <SBUSRSSIReader.h>
 #endif
 
 
@@ -1317,7 +1312,7 @@ void process50HzTask() {
   // Reads external pilot commands and performs functions based on stick configuration
   readPilotCommands(); 
   
-  #if defined(UseAnalogRSSIReader) || defined(UseEzUHFRSSIReader)
+  #if defined(UseAnalogRSSIReader) || defined(UseEzUHFRSSIReader) || defined(UseSBUSRSSIReader)
     readRSSI();
   #endif
 
