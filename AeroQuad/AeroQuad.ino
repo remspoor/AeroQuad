@@ -52,6 +52,10 @@
   #error "CameraTXControl need to have CameraControl defined"
 #endif 
 
+#if defined (OSD50HZ) && !defined (AeroQuadSTM32)
+  #error "OSD can't be updated at that speed on artduino"
+#endif
+
 
 #include <EEPROM.h>
 #include <Wire.h>
@@ -968,7 +972,12 @@
 //********************** MOTORS DECLARATION **************
 //********************************************************
 #if defined(triConfig)
-  #include <Motors_Tri.h>
+  #if defined (MOTOR_STM32)
+    #define MOTORS_STM32_TRI
+    #include <Motors_STM32.h>    
+  #else
+    #include <Motors_Tri.h>
+  #endif
 #elif defined(MOTOR_PWM)
   #include <Motors_PWM.h>
 #elif defined(MOTOR_PWM_Timer)
