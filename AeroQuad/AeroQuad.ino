@@ -52,11 +52,6 @@
   #error "CameraTXControl need to have CameraControl defined"
 #endif 
 
-#if defined (OSD50HZ) && !defined (AeroQuadSTM32)
-  #error "OSD can't be updated at that speed on artduino"
-#endif
-
-
 #include <EEPROM.h>
 #include <Wire.h>
 #include <GlobalDefined.h>
@@ -109,6 +104,17 @@
   void initPlatform() {
     setGyroAref(aref);
   }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+  }
 
   /**
    * Measure critical sensors
@@ -154,6 +160,18 @@
   void initPlatform() {
     setGyroAref(aref);
   }
+  
+    // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+  }
+
 
   /**
    * Measure critical sensors
@@ -215,6 +233,14 @@
 
     Wire.begin();
     TWBR = 12;
+  }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Kenny default value, a real accel calibration is strongly recommended
+    accelScaleFactor[XAXIS] = 0.0047340002;
+    accelScaleFactor[YAXIS] = -0.0046519994;
+    accelScaleFactor[ZAXIS] = -0.0046799998;
   }
 
   /**
@@ -286,6 +312,14 @@
     TWBR = 12;
   }
 
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Kenny default value, a real accel calibration is strongly recommended
+    accelScaleFactor[XAXIS] = 0.0371299982;
+    accelScaleFactor[YAXIS] = -0.0374319982;
+    accelScaleFactor[ZAXIS] = -0.0385979986;
+  }
+
   /**
    * Measure critical sensors
    */
@@ -331,6 +365,18 @@
   void initPlatform() {
     setGyroAref(aref);
   }
+  
+    // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+  }
+
 
   /**
    * Measure critical sensors
@@ -364,6 +410,7 @@
 
   // heading mag hold declaration
   #ifdef HeadingMagHold
+    #include <Compass.h>
 //    #define SPARKFUN_5883L_BOB
     #define HMC5843
   #endif
@@ -422,6 +469,19 @@
     Wire.begin();
     TWBR = 12;
   }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Kenny default value, a real accel calibration is strongly recommended
+    accelScaleFactor[XAXIS] = 0.0046449995;
+    accelScaleFactor[YAXIS] = -0.0047950000;
+    accelScaleFactor[ZAXIS] = -0.0047549996;
+    #ifdef HeadingMagHold
+      magBias[XAXIS]  = 60.000000;
+      magBias[YAXIS]  = -39.000000;
+      magBias[ZAXIS]  = -7.500000;
+    #endif
+  }
 
   /**
    * Measure critical sensors
@@ -454,6 +514,7 @@
 
   // heading mag hold declaration
   #ifdef HeadingMagHold
+    #include <Compass.h>
     #define SPARKFUN_9DOF_5883L
   #endif
 
@@ -512,6 +573,19 @@
 
     Wire.begin();
     TWBR = 12;
+  }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Kenny default value, a real accel calibration is strongly recommended
+    accelScaleFactor[XAXIS] = 0.0365570020;
+    accelScaleFactor[YAXIS] = 0.0363000011;
+    accelScaleFactor[ZAXIS] = -0.0384629964;
+    #ifdef HeadingMagHold
+      magBias[XAXIS]  = 1.500000;
+      magBias[YAXIS]  = 205.500000;
+      magBias[ZAXIS]  = -33.000000;
+    #endif
   }
 
   /**
@@ -587,6 +661,23 @@
     Wire.begin();
     TWBR = 12;
   }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+    #ifdef HeadingMagHold
+      magBias[XAXIS]  = 0.0;
+      magBias[YAXIS]  = 0.0;
+      magBias[ZAXIS]  = 0.0;
+    #endif
+  }
+
 
   /**
    * Measure critical sensors
@@ -646,6 +737,18 @@
        initializeWiiSensors();
      #endif
   }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+  }
+
 
   /**
    * Measure critical sensors
@@ -683,6 +786,7 @@
 
   // heading mag hold declaration
   #ifdef HeadingMagHold
+    #include <Compass.h>
     #define HMC5843
   #endif
 
@@ -718,6 +822,23 @@
 
     initializeWiiSensors();
   }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+    #ifdef HeadingMagHold
+      magBias[XAXIS]  = 0.0;
+      magBias[YAXIS]  = 0.0;
+      magBias[ZAXIS]  = 0.0;
+    #endif
+  }
+
 
   /**
    * Measure critical sensors
@@ -804,6 +925,18 @@
     kinematicsChr6dm = &chr6dm;
     compassChr6dm = &chr6dm;
   }
+  
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+  }
+
 
   /**
    * Measure critical sensors
@@ -895,6 +1028,18 @@
 //    tempKinematics.setGyroscope(&gyroSpecific);
     compassChr6dm = &chr6dm;
   }
+
+  // called when eeprom is initialized
+  void initializePlatformSpecificAccelCalibration() {
+    // Accel Cal
+    accelScaleFactor[XAXIS] = 1.0;
+    runTimeAccelBias[XAXIS] = 0.0;
+    accelScaleFactor[YAXIS] = 1.0;
+    runTimeAccelBias[YAXIS] = 0.0;
+    accelScaleFactor[ZAXIS] = 1.0;
+    runTimeAccelBias[ZAXIS] = 0.0;
+  }
+
 
   /**
    * Measure critical sensors
@@ -994,10 +1139,10 @@
 //******* HEADING HOLD MAGNETOMETER DECLARATION **********
 //********************************************************
 #if defined(HMC5843)
-  #include <HeadingFusionProcessorCompFilter.h>
+  #include <HeadingFusionProcessorMARG.h>
   #include <Magnetometer_HMC5843.h>
 #elif defined(SPARKFUN_9DOF_5883L) || defined(SPARKFUN_5883L_BOB) || defined(HMC5883L)
-  #include <HeadingFusionProcessorCompFilter.h>
+  #include <HeadingFusionProcessorMARG.h>
   #include <Magnetometer_HMC5883L.h>
 #elif defined(COMPASS_CHR6DM)
 #endif
@@ -1152,15 +1297,17 @@ void setup() {
   digitalWrite(LED_Green, LOW);
 
   initCommunication();
-
+  
   readEEPROM(); // defined in DataStorage.h
+  boolean firstTimeBoot = false;
   if (readFloat(SOFTWARE_VERSION_ADR) != SOFTWARE_VERSION) { // If we detect the wrong soft version, we init all parameters
     initializeEEPROM();
     writeEEPROM();
+    firstTimeBoot = true;
   }
-
+  
   initPlatform();
-
+  
   #if defined(quadXConfig) || defined(quadPlusConfig) || defined(quadY4Config) || defined(triConfig)
      initializeMotors(FOUR_Motors);
   #elif defined(hexPlusConfig) || defined(hexXConfig) || defined(hexY6Config)
@@ -1169,18 +1316,37 @@ void setup() {
      initializeMotors(EIGHT_Motors);
   #endif
 
-  // Setup receiver pins for pin change interrupts
   initializeReceiver(LASTCHANNEL);
   initReceiverFromEEPROM();
-
-  initializeKinematics();
-
+  
+  // Initialize sensors
+  // If sensors have a common initialization routine
+  // insert it into the gyro class because it executes first
+  initializeGyro(); // defined in Gyro.h
+  while (!calibrateGyro()); // this make sure the craft is still befor to continue init process
+  initializeAccel(); // defined in Accel.h
+  if (firstTimeBoot) {
+    computeAccelBias();
+    writeEEPROM();
+  }
+  setupFourthOrder();
+  initSensorsZeroFromEEPROM();
+  
   // Integral Limit for attitude mode
   // This overrides default set in readEEPROM()
   // Set for 1/2 max attitude command (+/-0.75 radians)
   // Rate integral not used for now
   PID[ATTITUDE_XAXIS_PID_IDX].windupGuard = 0.375;
   PID[ATTITUDE_YAXIS_PID_IDX].windupGuard = 0.375;
+  
+  // Flight angle estimation
+  initializeKinematics();
+
+  #ifdef HeadingMagHold
+    vehicleState |= HEADINGHOLD_ENABLED;
+    initializeMagnetometer();
+    initializeHeadingFusion();
+  #endif
   
   // Optional Sensors
   #ifdef AltitudeHoldBaro
@@ -1195,7 +1361,7 @@ void setup() {
     PID[SONAR_ALTITUDE_HOLD_PID_IDX].D = PID[BARO_ALTITUDE_HOLD_PID_IDX].D;
     PID[SONAR_ALTITUDE_HOLD_PID_IDX].windupGuard = PID[BARO_ALTITUDE_HOLD_PID_IDX].windupGuard;
   #endif
-
+  
   #ifdef BattMonitor
     initializeBatteryMonitor(sizeof(batteryData) / sizeof(struct BatteryData), batteryMonitorAlarmVoltage);
     vehicleState |= BATTMONITOR_ENABLED;
@@ -1231,25 +1397,6 @@ void setup() {
 
   #ifdef SlowTelemetry
      initSlowTelemetry();
-  #endif
-
-  setupFourthOrder();
-  
-  // Initialize sensors
-  // If sensors have a common initialization routine
-  // insert it into the gyro class because it executes first
-  initializeGyro(); // defined in Gyro.h
-  initializeAccel(); // defined in Accel.h
-  initSensorsZeroFromEEPROM();
-
-  // Calibrate sensors
-  calibrateGyro();
-//  computeAccelBias();
-  // Flight angle estimation
-  #ifdef HeadingMagHold
-    vehicleState |= HEADINGHOLD_ENABLED;
-    initializeMagnetometer();
-    initializeHeadingFusion();
   #endif
 
   previousTime = micros();
@@ -1309,6 +1456,14 @@ void process100HzTask() {
   #if defined(UseGPS)
     updateGps();
   #endif      
+  
+  #if defined(CameraControl)
+    moveCamera(kinematicsAngle[YAXIS],kinematicsAngle[XAXIS],kinematicsAngle[ZAXIS]);
+    #if defined CameraTXControl
+      processCameraTXControl();
+    #endif
+  #endif       
+
 }
 
 /*******************************************************************
@@ -1334,29 +1489,15 @@ void process50HzTask() {
       initHomeBase();
     }
   #endif      
-  
-  #if defined(CameraControl)
-    moveCamera(kinematicsAngle[YAXIS],kinematicsAngle[XAXIS],kinematicsAngle[ZAXIS]);
-  #endif      
-  
-  #if defined CameraTXControl
-    processCameraTXControl();
-  #endif
-
-
-  #ifdef MAX7456_OSD
-    #ifdef OSD50HZ
-      updateOSD();
-    #endif
-  #endif
-    
 }
 
 /*******************************************************************
  * 10Hz task
  ******************************************************************/
 void process10HzTask1() {
+  
   #if defined(HeadingMagHold)
+  
     G_Dt = (currentTime - tenHZpreviousTime) / 1000000.0;
     tenHZpreviousTime = currentTime;
      
@@ -1395,9 +1536,7 @@ void process10HzTask3() {
     #endif
 
     #ifdef MAX7456_OSD
-    #ifndef OSD50HZ
       updateOSD();
-    #endif
     #endif
     
     #if defined(UseGPS) || defined(BattMonitor)
