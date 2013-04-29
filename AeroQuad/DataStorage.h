@@ -123,15 +123,15 @@ void nvrWritePID(unsigned char IDPid, unsigned int IDEeprom) {
 // contains all default values when re-writing EEPROM
 void initializeEEPROM() {
   PID[RATE_XAXIS_PID_IDX].P = 100.0;
-  PID[RATE_XAXIS_PID_IDX].I = 0.0;
-  PID[RATE_XAXIS_PID_IDX].D = -300.0;
+  PID[RATE_XAXIS_PID_IDX].I = 150.0;
+  PID[RATE_XAXIS_PID_IDX].D = -350.0;
   PID[RATE_YAXIS_PID_IDX].P = 100.0;
-  PID[RATE_YAXIS_PID_IDX].I = 0.0;
-  PID[RATE_YAXIS_PID_IDX].D = -300.0;
-  PID[ATTITUDE_XAXIS_PID_IDX].P = 4.0;
+  PID[RATE_YAXIS_PID_IDX].I = 150.0;
+  PID[RATE_YAXIS_PID_IDX].D = -350.0;
+  PID[ATTITUDE_XAXIS_PID_IDX].P = 3.5;
   PID[ATTITUDE_XAXIS_PID_IDX].I = 0.0;
   PID[ATTITUDE_XAXIS_PID_IDX].D = 0.0;
-  PID[ATTITUDE_YAXIS_PID_IDX].P = 4.0;
+  PID[ATTITUDE_YAXIS_PID_IDX].P = 3.5;
   PID[ATTITUDE_YAXIS_PID_IDX].I = 0.0;
   PID[ATTITUDE_YAXIS_PID_IDX].D = 0.0;
   PID[ZAXIS_PID_IDX].P = 200.0;
@@ -143,11 +143,16 @@ void initializeEEPROM() {
   // AKA PID experiements
   PID[ATTITUDE_GYRO_XAXIS_PID_IDX].P = 100.0;
   PID[ATTITUDE_GYRO_XAXIS_PID_IDX].I = 0.0;
-  PID[ATTITUDE_GYRO_XAXIS_PID_IDX].D = -300.0;
+  PID[ATTITUDE_GYRO_XAXIS_PID_IDX].D = -350.0;
   PID[ATTITUDE_GYRO_YAXIS_PID_IDX].P = 100.0;
   PID[ATTITUDE_GYRO_YAXIS_PID_IDX].I = 0.0;
-  PID[ATTITUDE_GYRO_YAXIS_PID_IDX].D = -300.0;
+  PID[ATTITUDE_GYRO_YAXIS_PID_IDX].D = -350.0;
   rotationSpeedFactor = 1.0;
+  YAW_DIRECTION = 1;
+  
+  flightConfigType = QUAD_X;
+  receiverTypeUsed = RECEIVER_PWM;
+  nbReceiverChannel = 5;
 
   #if defined (AltitudeHoldBaro)
     PID[BARO_ALTITUDE_HOLD_PID_IDX].P = 25.0;
@@ -191,20 +196,16 @@ void initializeEEPROM() {
     #endif
   }
     
-  receiverXmitFactor = 1.0;
   minArmedThrottle = 1150;
   // AKA - old setOneG not in SI - accel->setOneG(500);
   accelOneG = -9.80665; // AKA set one G to 9.8 m/s^2
-  for (byte channel = XAXIS; channel < LASTCHANNEL; channel++) {
-    receiverSlope[channel] = 1.0;
-    receiverOffset[channel] = 0.0;
-    receiverSmoothFactor[channel] = 1.0;
+  for (byte channel = XAXIS; channel < MAX_NB_CHANNEL; channel++) {
+    receiverMinValue[channel] = 1000;
+    receiverMaxValue[channel] = 2000;
   }
-  receiverSmoothFactor[ZAXIS] = 0.5;
 
   flightMode = RATE_FLIGHT_MODE;
   headingHoldConfig = ON;
-  aref = 5.0; // Use 3.0 if using a v1.7 shield or use 2.8 for an AeroQuad Shield < v1.7
   
   // Battery Monitor
   #ifdef BattMonitor
@@ -271,6 +272,14 @@ void readEEPROM() {
 
   rotationSpeedFactor = readFloat(ROTATION_SPEED_FACTOR_ARD);
   
+  flightConfigType = readFloat(FLIGHT_CONFIG_TYPE_ADR);
+  receiverTypeUsed = readFloat(RECEIVER_CONFIG_TYPE_ADR);
+  nbReceiverChannel = readFloat(NB_RECEIVER_CHANNEL_ADR);
+  YAW_DIRECTION = readFloat(REVERSE_YAW_ADR);
+  for (byte i = 0; i < nbReceiverChannel;i++) {
+    receiverChannelMap[i] = readFloat(RECEIVER_CHANNEL_MAP_ADR[i]);    
+  }
+  
   // Leaving separate PID reads as commented for now
   // Previously had issue where EEPROM was not reading right data
   #if defined AltitudeHoldBaro || defined AltitudeHoldRangeFinder
@@ -313,7 +322,6 @@ void readEEPROM() {
   }
     
   minArmedThrottle = readFloat(MINARMEDTHROTTLE_ADR);
-  aref = readFloat(AREF_ADR);
   flightMode = readFloat(FLIGHTMODE_ADR);
   accelOneG = readFloat(ACCEL_1G_ADR);
   headingHoldConfig = readFloat(HEADINGHOLD_ADR);
@@ -366,6 +374,14 @@ void writeEEPROM(){
   
   writeFloat(rotationSpeedFactor,ROTATION_SPEED_FACTOR_ARD);
   
+  writeFloat(flightConfigType, FLIGHT_CONFIG_TYPE_ADR);
+  writeFloat(receiverTypeUsed, RECEIVER_CONFIG_TYPE_ADR);
+  writeFloat(nbReceiverChannel, NB_RECEIVER_CHANNEL_ADR);
+  writeFloat(YAW_DIRECTION, REVERSE_YAW_ADR);
+  for (byte i = 0; i < nbReceiverChannel;i++) {
+    writeFloat(receiverChannelMap[i], RECEIVER_CHANNEL_MAP_ADR[i]);    
+  }
+  
   #if defined AltitudeHoldBaro
     writePID(BARO_ALTITUDE_HOLD_PID_IDX, ALTITUDE_PID_GAIN_ADR);
     writeFloat(PID[BARO_ALTITUDE_HOLD_PID_IDX].windupGuard, ALTITUDE_WINDUP_ADR);
@@ -382,13 +398,6 @@ void writeEEPROM(){
     writeFloat(minThrottleAdjust, ALTITUDE_MIN_THROTTLE_ADR);
     writeFloat(maxThrottleAdjust, ALTITUDE_MAX_THROTTLE_ADR);
     writePID(ZDAMPENING_PID_IDX, ZDAMP_PID_GAIN_ADR);
-  #else
-    writeFloat(0.1, ALTITUDE_SMOOTH_ADR);
-    writeFloat(90, ALTITUDE_BUMP_ADR);
-    writeFloat(250, ALTITUDE_PANIC_ADR);
-    writeFloat(-50, ALTITUDE_MIN_THROTTLE_ADR);
-    writeFloat(50, ALTITUDE_MAX_THROTTLE_ADR);
-    writeFloat(0.1, ALTITUDE_SMOOTH_ADR);
   #endif
   
   #ifdef HeadingMagHold
@@ -397,16 +406,13 @@ void writeEEPROM(){
     writeFloat(magBias[ZAXIS], ZAXIS_MAG_BIAS_ADR);
   #endif
   writeFloat(windupGuard, WINDUPGUARD_ADR);
-  writeFloat(receiverXmitFactor, XMITFACTOR_ADR);
 
-  for(byte channel = XAXIS; channel < LASTCHANNEL; channel++) {
-    writeFloat(receiverSlope[channel],  RECEIVER_DATA[channel].slope);
-    writeFloat(receiverOffset[channel], RECEIVER_DATA[channel].offset);
-    writeFloat(receiverSmoothFactor[channel], RECEIVER_DATA[channel].smooth_factor);
+  for(byte channel = XAXIS; channel < MAX_NB_CHANNEL; channel++) {
+    writeFloat(receiverMinValue[channel],  RECEIVER_DATA[channel].slope);
+    writeFloat(receiverMaxValue[channel], RECEIVER_DATA[channel].offset);
   }
 
   writeFloat(minArmedThrottle, MINARMEDTHROTTLE_ADR);
-  writeFloat(aref, AREF_ADR);
   writeFloat(flightMode, FLIGHTMODE_ADR);
   writeFloat(headingHoldConfig, HEADINGHOLD_ADR);
   writeFloat(accelOneG, ACCEL_1G_ADR);
@@ -423,9 +429,6 @@ void writeEEPROM(){
   #if defined (AltitudeHoldRangeFinder)
     writeFloat(maxRangeFinderRange, RANGE_FINDER_MAX_ADR);
     writeFloat(minRangeFinderRange, RANGE_FINDER_MIN_ADR);
-  #else
-    writeFloat(0, RANGE_FINDER_MAX_ADR);
-    writeFloat(0, RANGE_FINDER_MIN_ADR);
   #endif
   
   #if defined (UseGPSNavigator)
@@ -490,14 +493,33 @@ void storeSensorsZeroToEEPROM() {
 }
 
 void initReceiverFromEEPROM() {
-  receiverXmitFactor = readFloat(XMITFACTOR_ADR);
   
-  for(byte channel = XAXIS; channel < LASTCHANNEL; channel++) {
-    receiverSlope[channel] = readFloat(RECEIVER_DATA[channel].slope);
-    receiverOffset[channel] = readFloat(RECEIVER_DATA[channel].offset);
-    receiverSmoothFactor[channel] = readFloat(RECEIVER_DATA[channel].smooth_factor);
+  for(byte channel = XAXIS; channel < MAX_NB_CHANNEL; channel++) {
+    receiverMinValue[channel] = readFloat(RECEIVER_DATA[channel].slope);
+    receiverMaxValue[channel] = readFloat(RECEIVER_DATA[channel].offset);
   }
 }
+
+//void storeVehicleConfigToEEPROM() {
+//  writeFloat(flightConfigType, FLIGHT_CONFIG_TYPE_ADR);
+//  writeFloat(receiverTypeUsed, RECEIVER_CONFIG_TYPE_ADR);
+//  writeFloat(nbReceiverChannel, NB_RECEIVER_CHANNEL_ADR);
+//  writeFloat(YAW_DIRECTION, REVERSE_YAW_ADR);
+//  for (byte i = 0; i < nbReceiverChannel;i++) {
+//    writeFloat(receiverChannelMap[i], RECEIVER_CHANNEL_MAP_ADR[i]);    
+//  }
+//}
+//
+//void readVehicleConfigFromEEPROM() {
+//  flightConfigType = readFloat(FLIGHT_CONFIG_TYPE_ADR);
+//  receiverTypeUsed = readFloat(RECEIVER_CONFIG_TYPE_ADR);
+//  nbReceiverChannel = readFloat(NB_RECEIVER_CHANNEL_ADR);
+//  YAW_DIRECTION = readFloat(REVERSE_YAW_ADR);
+//  for (byte i = 0; i < nbReceiverChannel;i++) {
+//    receiverChannelMap[i] = readFloat(RECEIVER_CHANNEL_MAP_ADR[i]);    
+//  }
+//
+//}
 
 #endif // _AQ_DATA_STORAGE_H_
 

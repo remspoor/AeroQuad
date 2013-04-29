@@ -58,33 +58,30 @@ void processAltitudeHold()
           sonarAltitudeToHoldTarget = rangeFinderRange[ALTITUDE_RANGE_FINDER_INDEX];
         }
         altitudeHoldThrottleCorrection = updatePID(sonarAltitudeToHoldTarget, rangeFinderRange[ALTITUDE_RANGE_FINDER_INDEX], &PID[SONAR_ALTITUDE_HOLD_PID_IDX]);
-        altitudeHoldThrottleCorrection = constrain(altitudeHoldThrottleCorrection, minThrottleAdjust, maxThrottleAdjust);
       }
     #endif
     #if defined AltitudeHoldBaro
       if (altitudeHoldThrottleCorrection == INVALID_THROTTLE_CORRECTION) {
         altitudeHoldThrottleCorrection = updatePID(baroAltitudeToHoldTarget, getBaroAltitude(), &PID[BARO_ALTITUDE_HOLD_PID_IDX]);
-        altitudeHoldThrottleCorrection = constrain(altitudeHoldThrottleCorrection, minThrottleAdjust, maxThrottleAdjust);
       }
     #endif        
     if (altitudeHoldThrottleCorrection == INVALID_THROTTLE_CORRECTION) {
-      throttle = receiverCommand[THROTTLE];
+      throttle = receiverCommand[receiverChannelMap[THROTTLE]];
       return;
     }
     
     // ZDAMPENING COMPUTATIONS
     #if defined AltitudeHoldBaro || defined AltitudeHoldRangeFinder
       float zDampeningThrottleCorrection = -updatePID(0.0, estimatedZVelocity, &PID[ZDAMPENING_PID_IDX]);
-      zDampeningThrottleCorrection = constrain(zDampeningThrottleCorrection, minThrottleAdjust, maxThrottleAdjust);
     #endif
 
     
-    if (abs(altitudeHoldThrottle - receiverCommand[THROTTLE]) > altitudeHoldPanicStickMovement) {
+    if (abs(altitudeHoldThrottle - receiverCommand[receiverChannelMap[THROTTLE]]) > altitudeHoldPanicStickMovement) {
       altitudeHoldState = ALTPANIC; // too rapid of stick movement so PANIC out of ALTHOLD
     } 
     else {
       
-      if (receiverCommand[THROTTLE] > (altitudeHoldThrottle + altitudeHoldBump)) { // AKA changed to use holdThrottle + ALTBUMP - (was MAXCHECK) above 1900
+      if (receiverCommand[receiverChannelMap[THROTTLE]] > (altitudeHoldThrottle + altitudeHoldBump)) { // AKA changed to use holdThrottle + ALTBUMP - (was MAXCHECK) above 1900
         #if defined AltitudeHoldBaro
           baroAltitudeToHoldTarget += ALTITUDE_BUMP_SPEED;
         #endif
@@ -96,7 +93,7 @@ void processAltitudeHold()
         #endif
       }
       
-      if (receiverCommand[THROTTLE] < (altitudeHoldThrottle - altitudeHoldBump)) { // AKA change to use holdThorrle - ALTBUMP - (was MINCHECK) below 1100
+      if (receiverCommand[receiverChannelMap[THROTTLE]] < (altitudeHoldThrottle - altitudeHoldBump)) { // AKA change to use holdThorrle - ALTBUMP - (was MINCHECK) below 1100
         #if defined AltitudeHoldBaro
           baroAltitudeToHoldTarget -= ALTITUDE_BUMP_SPEED;
         #endif
@@ -108,12 +105,64 @@ void processAltitudeHold()
         #endif
       }
     }
-    throttle = altitudeHoldThrottle + altitudeHoldThrottleCorrection + zDampeningThrottleCorrection;
+    throttle = constrain((altitudeHoldThrottle + altitudeHoldThrottleCorrection + zDampeningThrottleCorrection), minThrottleAdjust, maxThrottleAdjust);
   }
   else {
-    throttle = receiverCommand[THROTTLE];
+    throttle = receiverCommand[receiverChannelMap[THROTTLE]];
   }
+ 
+  // compute baro velocity rate
+  #if defined(AltitudeHoldBaro)
+    deltaAltitudeRateMeters(50.0); 					// update altitude rate in meters per secon
+  #endif
 }
+
+
+#if defined(AltitudeHoldBaro)
+
+#define numberofSamplestoFilter 23					// numberofSamplestoFilter should  be an odd number, no smaller than 3											// filterSamples should  be an odd number, no smaller than 3
+float lastbaroAltitude = 0.0;
+
+/**********************************************************
+ ********************** digitalSmooth *********************
+ **********************************************************/
+
+float digitalSmooth(float rawIn, float *baroSmoothArray){		// some storage for holding out barometer samples
+  static float sumSamplestoFilter = 0.0;				// total samples after all processing
+  static int thisBaroSample, currentSampleSlot = 0;			// loop variables
+  static boolean done = false;						// used to find totalfilterSamples
+
+  if (!done) {								// find total samples while storing
+    for (currentSampleSlot=0; currentSampleSlot < numberofSamplestoFilter; currentSampleSlot++){
+      sumSamplestoFilter += baroSmoothArray[currentSampleSlot];
+    }
+    done = true;
+  }
+
+  thisBaroSample = (thisBaroSample + 1) % numberofSamplestoFilter;	// increment counter and roll over when needed
+									// % (modulo operator) rolls over variable
+  sumSamplestoFilter -= baroSmoothArray[thisBaroSample];		// drop last value from total
+  baroSmoothArray[thisBaroSample] = rawIn;				// input new data into the oldest slot
+  sumSamplestoFilter += rawIn;						// add new value to total
+  
+  return sumSamplestoFilter/numberofSamplestoFilter;
+}
+
+/**********************************************************
+ *************** Determine vertical rate (+/-) ************
+ **********************************************************/
+// this routine must be called in 50 Hz slice
+
+void deltaAltitudeRateMeters( float timeIncrement ) {	 		// meters per second using 50Hz slice
+  static float smoothArray[numberofSamplestoFilter];			// array for holding smoothed values for New Altitude 
+
+  climbFallRate = (baroAltitude-lastbaroAltitude)*timeIncrement;	// called in 50 Hz slice (timeIncrement)
+
+  climbFallRate = digitalSmooth(climbFallRate, smoothArray);		// so our eyes don't vibrate out of our skull
+  lastbaroAltitude = baroAltitude;
+}
+
+#endif
 
 #endif
 

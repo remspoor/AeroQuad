@@ -2,41 +2,6 @@
 
 #define _PLATFORM_AEROQUAD32_H_
 
-static byte __attribute__((unused)) stm32_motor_mapping[] = {
-  Port2Pin('C',  9),
-  Port2Pin('C',  8),
-  Port2Pin('C',  7),
-  Port2Pin('C',  6),
-  Port2Pin('A', 15),
-  Port2Pin('B',  3),
-  Port2Pin('B',  4),
-  Port2Pin('B',  5)
-};
-
-static byte __attribute__((unused)) stm32_motor_mapping_tri[] = {
-  Port2Pin('A', 15), // note this must be on separate timer device !!
-  Port2Pin('C',  8),
-  Port2Pin('C',  7),
-  Port2Pin('C',  6),
-};
-
-#ifdef RECEIVER_STM32PPM
-  static byte receiverPinPPM = Port2Pin('D', 15);
-#elif defined ReceiverSBUS
-  // Do nothing
-#else
-  static byte receiverPin[] = {
-    Port2Pin('D', 12),
-    Port2Pin('D', 13),
-    Port2Pin('D', 14),
-    Port2Pin('D', 15),
-    Port2Pin('E',  9),
-    Port2Pin('E', 11),
-    Port2Pin('E', 13),
-    Port2Pin('E', 14)
-  };
-#endif
-
 #define STM32_BOARD_TYPE "aeroquad32"
 #define LED_Green  Port2Pin('E', 6)
 #define LED_Red    Port2Pin('E', 5)
@@ -124,6 +89,22 @@ void initPlatform() {
   #if !defined(USE_USB_SERIAL)
     SerialUSB.begin();
   #endif
+  
+  switch (flightConfigType) 
+  {
+    case OCTO_X :
+    case OCTO_PLUS :
+    case OCTO_X8 :
+	  LASTMOTOR = 8;
+	  break;
+    case HEX_Y6 :
+    case HEX_PLUS :
+    case HEX_X :
+	  LASTMOTOR = 6;
+	  break;
+    default:
+	  LASTMOTOR = 4;
+  }
 }
 
 // called when eeprom is initialized
