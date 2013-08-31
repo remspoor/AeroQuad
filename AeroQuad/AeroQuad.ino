@@ -1259,6 +1259,10 @@
   #endif
 #endif  
 
+#if defined(MavLink)
+  #define SERIAL_MavLink Serial1
+#endif
+
 #ifdef SlowTelemetry
   #include <AQ_RSCode.h>
 #endif
@@ -1281,9 +1285,10 @@
 
 #if defined(MavLink)
   #include "MavLink.h"
-#else
-  #include "SerialCom.h"
 #endif
+//#else
+  #include "SerialCom.h"
+//#endif
 
 
 
@@ -1293,11 +1298,16 @@
  * Aeroquad
  ******************************************************************/
 void setup() {
-  SERIAL_BEGIN(BAUD);
   pinMode(LED_Green, OUTPUT);
   digitalWrite(LED_Green, LOW);
 
+  SERIAL_BEGIN(BAUD); // used for the standard cli
   initCommunication();
+
+  #if defined(MavLink)
+    SERIAL_MavLink.begin(115200);
+    initMavLinkCommunication();
+  #endif
   
   readEEPROM(); // defined in DataStorage.h
   boolean firstTimeBoot = false;
@@ -1529,6 +1539,10 @@ void process10HzTask2() {
   // Listen for configuration commands and reports telemetry
   readSerialCommand();
   sendSerialTelemetry();
+  #if defined(MavLink)
+    readMavLinkCommand();
+    sendMavLinkTelemetry();
+  #endif
 }
 
 /*******************************************************************
