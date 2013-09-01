@@ -1260,7 +1260,14 @@
 #endif  
 
 #if defined(MavLink)
-  #define SERIAL_MavLink Serial1
+  #if !defined(SERIAL_MavLink)
+    #define SERIAL_MavLink Serial1
+  #endif
+  #if defined(CONFIG_BAUDRATE_MavLink)
+    #define BAUDRATE_MavLink CONFIG_BAUDRATE_MavLink
+  #else
+    #define BAUDRATE_MavLink 115200
+  #endif
 #endif
 
 #ifdef SlowTelemetry
@@ -1278,6 +1285,7 @@
 #include "FlightCommandProcessor.h"
 #include "HeadingHoldProcessor.h"
 #include "DataStorage.h"
+#include "SerialCom.h"
 
 #if defined(UseGPS) || defined(BattMonitor)
   #include "LedStatusProcessor.h"
@@ -1286,9 +1294,6 @@
 #if defined(MavLink)
   #include "MavLink.h"
 #endif
-//#else
-  #include "SerialCom.h"
-//#endif
 
 
 
@@ -1305,7 +1310,7 @@ void setup() {
   initCommunication();
 
   #if defined(MavLink)
-    SERIAL_MavLink.begin(115200);
+    SERIAL_MavLink.begin(BAUDRATE_MavLink);
     initMavLinkCommunication();
   #endif
   

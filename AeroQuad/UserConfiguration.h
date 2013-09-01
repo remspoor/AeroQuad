@@ -153,11 +153,13 @@
 // *******************************************************************************************************************************
 //#define WirelessTelemetry	// Enables Wireless telemetry on Serial3  // Wireless telemetry enable
 
+//#define CONFIG_BAUDRATE 19200 // overrides default baudrate for serial port (Configurator/WirelessTelemetry)
+
 #define MavLink               // Enables the MavLink protocol
 #define MAV_SYSTEM_ID 100		// Needs to be enabled when using MavLink, used to identify each of your copters using MavLink
 								// If you've only got one, leave the default value unchanged, otherwise make sure that each copter has a different ID 
 
-//#define CONFIG_BAUDRATE 19200 // overrides default baudrate for serial port (Configurator/MavLink/WirelessTelemetry)
+//#define CONFIG_BAUDRATE_MavLink 38400 // overrides default baudrate for the MavLink serial port
 
 //
 // *******************************************************************************************************************************
